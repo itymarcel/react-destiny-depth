@@ -45,7 +45,7 @@ const App = () => {
       <div className='settings absolute flex flex-col gap-1 top-0 left-0 h-12 border-red p-4'>
         <div className='flex items-center gap-2'>
           <Tally5 className='h-4 w-4 text-white' />
-          <input type='range' min={1} max={1000} step={1} value={count} onChange={(e) => setCount(Number(e.target.value))} />
+          <input type='range' min={1} max={300} step={1} value={count} onChange={(e) => setCount(Number(e.target.value))} />
         </div>
         <div className='flex items-center gap-2'>
           <Spline className='h-4 w-4 text-white' />

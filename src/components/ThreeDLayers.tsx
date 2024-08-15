@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from 'react';
 
 let lastFrameTime = Date.now();
-const frameInterval = 1000 / 30; // 30 FPS
+const frameInterval = 1000 / 60; // 30 FPS
 // Utility function to generate a random warm color
 const getRandomWarmColor = (): string => {
   const warmColors = [
