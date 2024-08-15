@@ -15,12 +15,12 @@ const App = () => {
 
   const [blurAmount, setBlurAmount] = useState<number>(() => {
     const savedValue = localStorage.getItem('blurAmount');
-    return savedValue !== null ? Number(savedValue) : 1;
+    return savedValue !== null ? Number(savedValue) : 0;
   });
 
   const [circleSize, setCircleSize] = useState<number>(() => {
     const savedValue = localStorage.getItem('circleSize');
-    return savedValue !== null ? Number(savedValue) : 0.2;
+    return savedValue !== null ? Number(savedValue) : 0.1;
   });
 
   // Save settings to localStorage whenever they change

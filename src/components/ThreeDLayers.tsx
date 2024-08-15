@@ -140,7 +140,7 @@ const ThreeDLayers: React.FC<ThreeDLayersProps> = ({ numLayers, easingFactor = 0
               borderColor: getRandomWarmColor(),
               width: circleSize * 100 + 'px',
               height: circleSize * 100 + 'px',
-              boxShadow: `0px 0px 30px ${getRandomWarmColor()}`,
+              boxShadow: `0px 0px 20px ${getRandomWarmColor()}`,
             }}
           ></div>
         </div>
