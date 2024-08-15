@@ -1,5 +1,7 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
+let lastFrameTime = Date.now();
+const frameInterval = 1000 / 30; // 30 FPS
 // Utility function to generate a random warm color
 const getRandomWarmColor = (): string => {
   const warmColors = [
@@ -23,14 +25,18 @@ interface ThreeDLayersProps {
   circleSize?: number;
 }
 
-const ThreeDLayers: React.FC<ThreeDLayersProps> = ({ numLayers, easingFactor=0.02, blurAmount=1, circleSize=1 }) => {
+const ThreeDLayers: React.FC<ThreeDLayersProps> = ({ numLayers, easingFactor = 0.005, blurAmount = 1, circleSize = 1 }) => {
   const layersRef = useRef<HTMLDivElement[]>([]);
   const targetX = useRef(0);
   const targetY = useRef(0);
   const currentX = useRef(0);
   const currentY = useRef(0);
+  const velocityX = useRef(0);
+  const velocityY = useRef(0);
   const directionFactors = useRef<number[]>([]);
   const animationFrameId = useRef<number | null>(null);
+
+  const friction = 0.7;
 
   // Initialize direction factors and random positions for circles
   useEffect(() => {
@@ -62,51 +68,53 @@ const ThreeDLayers: React.FC<ThreeDLayersProps> = ({ numLayers, easingFactor=0.0
     return () => document.removeEventListener('mousemove', handleMouseMove);
   }, []);
 
-  function easeInOutQuad(t: number) {
-    return t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
-  }
-
   const animate = () => {
-    const easedFactor = easeInOutQuad(easingFactor);
-  
-    currentX.current += (targetX.current - currentX.current) * easedFactor;
-    currentY.current += (targetY.current - currentY.current) * easedFactor;
-  
-    layersRef.current.forEach((layer, index) => {
-      const depthMultiplier: number = 100
-      const depth = -index * depthMultiplier + depthMultiplier * layersRef.current.length / 2
-      const directionFactor = directionFactors.current[index];
-  
-      const moveX = currentX.current * depth * 2 * directionFactor;
-      const moveY = currentY.current * depth * 2 * directionFactor;
-  
-      // Calculate rotation based on currentX and currentY
-      const rotateX = currentY.current * 90; // Rotation around the X-axis
-      const rotateY = currentX.current * 90; // Rotation around the Y-axis
-  
-      // Apply the transform with translation, rotation, and depth
-      layer.style.transform = `translateZ(${depth}px) translate(${moveX}px, ${moveY}px) rotateY(${rotateX}deg) rotateZ(${rotateY}deg)`;
-  
-      const _blurAmount = Math.abs(depth) / 50 * blurAmount;
-      console.log(blurAmount)
-      layer.style.filter = `blur(${_blurAmount}px)`;
-  
-      layer.style.zIndex = `${layersRef.current.length - index}`;
-    });
-  
-    animationFrameId.current = requestAnimationFrame(animate)
+    const now = Date.now();
+    if (now - lastFrameTime >= frameInterval) {
+      lastFrameTime = now;
+      const accelerationFactor = easingFactor;
+
+      // Calculate acceleration towards the target
+      const accelerationX = (targetX.current - currentX.current) * accelerationFactor;
+      const accelerationY = (targetY.current - currentY.current) * accelerationFactor;
+
+      // Update velocity with acceleration and apply friction
+      velocityX.current = velocityX.current * friction + accelerationX;
+      velocityY.current = velocityY.current * friction + accelerationY;
+
+      // Update current position with velocity
+      currentX.current += velocityX.current;
+      currentY.current += velocityY.current;
+
+      layersRef.current.forEach((layer, index) => {
+        const depthMultiplier = 100;
+        const depth = -index * depthMultiplier + depthMultiplier * layersRef.current.length / 2;
+        const directionFactor = directionFactors.current[index];
+
+        const moveX = currentX.current * depth * 2 * directionFactor;
+        const moveY = currentY.current * depth * 2 * directionFactor;
+
+        const rotateX = currentY.current * 90;
+        const rotateY = currentX.current * 90;
+
+        layer.style.transform = `translateZ(${depth}px) translate(${moveX}px, ${moveY}px) rotateY(${rotateX}deg) rotateZ(${rotateY}deg)`;
+
+        const _blurAmount = Math.abs(depth) / 50 * blurAmount;
+        layer.style.filter = `blur(${_blurAmount}px)`;
+
+        layer.style.zIndex = `${layersRef.current.length - index}`;
+      });
+    }
+
+    animationFrameId.current = requestAnimationFrame(animate);
   };
 
   useEffect(() => {
-    // Cancel any previous animation frame before starting a new one
     if (animationFrameId.current !== null) {
       cancelAnimationFrame(animationFrameId.current);
     }
-
-    // Start the animation
     animationFrameId.current = requestAnimationFrame(animate);
 
-    // Cleanup function to cancel the animation frame on unmount or when easingFactor changes
     return () => {
       if (animationFrameId.current !== null) {
         cancelAnimationFrame(animationFrameId.current);
@@ -115,8 +123,8 @@ const ThreeDLayers: React.FC<ThreeDLayersProps> = ({ numLayers, easingFactor=0.0
   }, [easingFactor, blurAmount, circleSize]);
 
   return (
-    <div className="relative w-full h-full max-h-full max-w-full overflow-hidden flex justify-center items-center perspective-[1500px] bg-gradient-to-r from-red-500/10" 
-      style={{perspective: '1100px'}}>
+    <div className="relative w-full h-full max-h-full max-w-full overflow-hidden flex justify-center items-center bg-gradient-to-r from-red-500/10"
+      style={{ perspective: '1100px' }}>
       {Array.from({ length: numLayers }).map((_, index) => (
         <div
           key={index}
@@ -124,6 +132,7 @@ const ThreeDLayers: React.FC<ThreeDLayersProps> = ({ numLayers, easingFactor=0.0
             if (el) layersRef.current[index] = el;
           }}
           className="absolute w-full h-full flex justify-center items-center"
+          style={{willChange: 'transform'}}
         >
           <div
             className={`circle rounded-full border-4 bg-black`}

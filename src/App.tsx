@@ -49,7 +49,7 @@ const App = () => {
         </div>
         <div className='flex items-center gap-2'>
           <Spline className='h-4 w-4 text-white' />
-          <input type='range' min={0} max={0.1} step={0.001} value={easingValue} onChange={(e) => setEasingValue(Number(e.target.value))} />
+          <input type='range' min={0} max={0.01} step={0.0001} value={easingValue} onChange={(e) => setEasingValue(Number(e.target.value))} />
         </div>
         <div className='flex items-center gap-2'>
         <CircleDashedIcon className='h-4 w-4 text-white' />
